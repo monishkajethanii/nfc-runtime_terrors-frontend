@@ -1,16 +1,16 @@
-// components/SignupForm.js - App Router Compatible
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-// Translation object - you can move this to a separate file later
+// Translation object
 const translations = {
   en: {
     signup: "Sign Up",
     signupSubtitle: "Choose your role and create your account",
     societyAdmin: "Society Admin",
     staff: "Staff",
-    fullName: "Full Name",
+    firstName: "First Name",
+    lastName: "Last Name",
     mobileNumber: "Mobile Number",
     email: "Email Address",
     societyName: "Society Name",
@@ -22,14 +22,16 @@ const translations = {
     societyCode: "Society Code",
     flatNumber: "Flat Number",
     wing: "Wing",
-    fullNameOptional: "Full Name",
+    firstNameOptional: "First Name",
+    lastNameOptional: "Last Name",
     workType: "Work Type",
     areaCity: "Area/City",
-    enterFullName: "Enter your full name",
+    enterFirstName: "Enter your first name",
+    enterLastName: "Enter your last name",
     enterMobile: "Enter mobile number",
     enterEmail: "Enter email address",
     enterSocietyName: "Enter society name",
-    enterSocietyAddress: "Enter society address",
+    enterSocietyAddress: "Start typing address...",
     enterCity: "Enter city",
     enterPinCode: "Enter PIN code",
     enterSocietyCode: "Enter society code",
@@ -43,24 +45,20 @@ const translations = {
     technician: "Technician",
     cleaner: "Cleaner",
     security: "Security Guard",
-    sendOTP: "Send for verification",
-    verifyOTP: "Verify & Sign Up",
-    enterOTP: "Enter OTP",
-    otpSent: "OTP sent successfully",
-    otpSentTo: "OTP sent to",
+    createAccount: "Create Account",
     processing: "Processing...",
-    signupSuccess: "Registration successful! Your account is being processed.",
-    invalidOTP: "Invalid OTP. Please try again.",
-    mobileRequired: "Mobile number is required.",
+    signupSuccess: "Registration successful! Your account has been created.",
     invalidSocietyCode: "Invalid society code. Please check and try again.",
-    adminApprovalNote: "Note: Your society registration will be reviewed and approved by our back office team within 24-48 hours."
-  },
+    mobileRequired: "Mobile number is required.",
+    adminApprovalNote: "Note: Your society registration will be reviewed and approved by our back office team within 24-48 hours.",
+     },
   hi: {
     signup: "साइन अप",
     signupSubtitle: "अपनी भूमिका चुनें और अपना खाता बनाएं",
     societyAdmin: "सोसाइटी एडमिन",
     staff: "स्टाफ",
-    fullName: "पूरा नाम",
+    firstName: "पहला नाम",
+    lastName: "अंतिम नाम",
     mobileNumber: "मोबाइल नंबर",
     email: "ईमेल पता",
     societyName: "सोसाइटी का नाम",
@@ -72,14 +70,16 @@ const translations = {
     societyCode: "सोसाइटी कोड",
     flatNumber: "फ्लैट नंबर",
     wing: "विंग",
-    fullNameOptional: "पूरा नाम (वैकल्पिक)",
+    firstNameOptional: "पहला नाम",
+    lastNameOptional: "अंतिम नाम",
     workType: "कार्य प्रकार",
     areaCity: "क्षेत्र/शहर",
-    enterFullName: "अपना पूरा नाम दर्ज करें",
+    enterFirstName: "अपना पहला नाम दर्ज करें",
+    enterLastName: "अपना अंतिम नाम दर्ज करें",
     enterMobile: "मोबाइल नंबर दर्ज करें",
     enterEmail: "ईमेल पता दर्ज करें",
     enterSocietyName: "सोसाइटी का नाम दर्ज करें",
-    enterSocietyAddress: "सोसाइटी का पता दर्ज करें",
+    enterSocietyAddress: "पता टाइप करना शुरू करें...",
     enterCity: "शहर दर्ज करें",
     enterPinCode: "पिन कोड दर्ज करें",
     enterSocietyCode: "सोसाइटी कोड दर्ज करें",
@@ -93,29 +93,39 @@ const translations = {
     technician: "तकनीशियन",
     cleaner: "सफाई कर्मचारी",
     security: "सिक्योरिटी गार्ड",
-    sendOTP: "OTP भेजें",
-    verifyOTP: "सत्यापित करें और साइन अप करें",
-    enterOTP: "OTP दर्ज करें",
-    otpSent: "OTP सफलतापूर्वक भेजा गया",
-    otpSentTo: "OTP भेजा गया",
+    createAccount: "खाता बनाएं",
     processing: "प्रसंस्करण...",
-    signupSuccess: "पंजीकरण सफल! आपका खाता प्रसंस्करण में है।",
-    invalidOTP: "अमान्य OTP। कृपया पुनः प्रयास करें।",
-    mobileRequired: "मोबाइल नंबर आवश्यक है।",
+    signupSuccess: "पंजीकरण सफल! आपका खाता बनाया गया है।",
     invalidSocietyCode: "अमान्य सोसाइटी कोड। कृपया जांचें और पुनः प्रयास करें।",
-    adminApprovalNote: "नोट: आपका सोसाइटी पंजीकरण 24-48 घंटों के भीतर हमारी बैक ऑफिस टीम द्वारा समीक्षा और अनुमोदित किया जाएगा।"
+    mobileRequired: "मोबाइल नंबर आवश्यक है।",
+    adminApprovalNote: "नोट: आपका सोसाइटी पंजीकरण 24-48 घंटों के भीतर हमारी बैक ऑफिस टीम द्वारा समीक्षा और अनुमोदित किया जाएगा।",
   }
 };
+
+// Mock address data - in real app, this would come from Google Places API or similar
+const mockAddresses = [
+  "123 MG Road, Pune, Maharashtra",
+  "456 Brigade Road, Bangalore, Karnataka",
+  "789 Park Street, Kolkata, West Bengal",
+  "321 Connaught Place, New Delhi, Delhi",
+  "654 Marine Drive, Mumbai, Maharashtra",
+  "987 Commercial Street, Bangalore, Karnataka",
+  "147 Salt Lake, Kolkata, West Bengal",
+  "258 Karol Bagh, New Delhi, Delhi",
+  "369 Bandra West, Mumbai, Maharashtra",
+  "741 Koregaon Park, Pune, Maharashtra"
+];
 
 const SignupForm = () => {
   const [currentLang, setCurrentLang] = useState('en');
   const [activeTab, setActiveTab] = useState('admin');
   const [isLoading, setIsLoading] = useState(false);
-  const [showOTP, setShowOTP] = useState(false);
-  const [otp, setOtp] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
   const [formData, setFormData] = useState({
     // Admin fields
-    fullName: '',
+    firstName: '',
+    lastName: '',
     mobile: '',
     email: '',
     societyName: '',
@@ -143,62 +153,57 @@ const SignupForm = () => {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Handle address suggestions
+    if (field === 'societyAddress' && value.length > 2) {
+      const filtered = mockAddresses.filter(addr =>
+        addr.toLowerCase().includes(value.toLowerCase())
+      );
+      setAddressSuggestions(filtered);
+      setShowAddressSuggestions(true);
+    } else if (field === 'societyAddress') {
+      setShowAddressSuggestions(false);
+    }
+  };
+
+  const handleAddressSelect = (address) => {
+    setFormData(prev => ({ ...prev, societyAddress: address }));
+    setShowAddressSuggestions(false);
+    
+    // Auto-fill city and pin code based on selected address
+    const parts = address.split(', ');
+    if (parts.length >= 2) {
+      const city = parts[parts.length - 2];
+      setFormData(prev => ({ ...prev, city: city }));
+    }
   };
 
   const handleFileUpload = (field, file) => {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
-  const validateSocietyCode = (code) => {
-    // Simulate validation - in real app, this would be an API call
-    const validCodes = ['SOC001', 'SOC002', 'SOC003'];
-    return validCodes.includes(code.toUpperCase());
-  };
-
-  const sendOTP = async (mobile) => {
-    setIsLoading(true);
-    // Simulate OTP sending
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setShowOTP(true);
-    setIsLoading(false);
-    alert(t('otpSent') + ': 123456'); // For demo purposes
-  };
-
-  const verifyOTP = async () => {
-    setIsLoading(true);
-    // Simulate OTP verification
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    if (otp === '123456') {
-      alert(t('signupSuccess'));
-      // Reset form
-      setFormData({
-        fullName: '', mobile: '', email: '', societyName: '', societyAddress: '',
-        city: '', pinCode: '', idProof: null, societyCode: '', flatNumber: '',
-        wing: '', workType: '', area: ''
-      });
-      setShowOTP(false);
-      setOtp('');
-    } else {
-      alert(t('invalidOTP'));
-    }
-    setIsLoading(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const handleSubmit = async () => {
     // Validation
     if (!formData.mobile) {
       alert(t('mobileRequired'));
       return;
     }
 
-    if (!showOTP) {
-      await sendOTP(formData.mobile);
-    } else {
-      await verifyOTP();
-    }
+    setIsLoading(true);
+    
+    // Simulate account creation
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    alert(t('signupSuccess'));
+    
+    // Reset form
+    setFormData({
+      firstName: '', lastName: '', mobile: '', email: '', societyName: '', 
+      societyAddress: '', city: '', pinCode: '', idProof: null, 
+      societyCode: '', flatNumber: '', wing: '', workType: '', area: ''
+    });
+    
+    setIsLoading(false);
   };
 
   const TabButton = ({ id, label, isActive }) => (
@@ -228,6 +233,39 @@ const SignupForm = () => {
         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
         required={required}
       />
+    </div>
+  );
+
+  const AddressInputField = ({ label, value, onChange, required = false, placeholder }) => (
+    <div className="space-y-2 relative">
+      <label className="block text-sm font-medium text-gray-700">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+        required={required}
+        onFocus={() => value.length > 2 && setShowAddressSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowAddressSuggestions(false), 200)}
+      />
+      
+      {/* Address Suggestions Dropdown */}
+      {showAddressSuggestions && addressSuggestions.length > 0 && (
+        <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto">
+          {addressSuggestions.map((address, index) => (
+            <div
+              key={index}
+              className="px-4 py-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+              onClick={() => handleAddressSelect(address)}
+            >
+              <div className="text-sm text-gray-900">{address}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -309,24 +347,33 @@ const SignupForm = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 mb-6 p-1 bg-white rounded-lg shadow-sm">
+        <div className="flex space-x-1 mb-6 p-1 bg-white rounded-lg shadow-sm">
           <TabButton id="admin" label={t('societyAdmin')} isActive={activeTab === 'admin'} />
           <TabButton id="staff" label={t('staff')} isActive={activeTab === 'staff'} />
         </div>
 
         {/* Form */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
             {/* Society Admin Form */}
             {activeTab === 'admin' && (
               <>
-                <InputField
-                  label={t('fullName')}
-                  value={formData.fullName}
-                  onChange={(value) => handleInputChange('fullName', value)}
-                  required
-                  placeholder={t('enterFullName')}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField
+                    label={t('firstName')}
+                    value={formData.firstName}
+                    onChange={(value) => handleInputChange('firstName', value)}
+                    required
+                    placeholder={t('enterFirstName')}
+                  />
+                  <InputField
+                    label={t('lastName')}
+                    value={formData.lastName}
+                    onChange={(value) => handleInputChange('lastName', value)}
+                    required
+                    placeholder={t('enterLastName')}
+                  />
+                </div>
                 <InputField
                   label={t('mobileNumber')}
                   type="tel"
@@ -340,7 +387,6 @@ const SignupForm = () => {
                   type="email"
                   value={formData.email}
                   onChange={(value) => handleInputChange('email', value)}
-                  required
                   placeholder={t('enterEmail')}
                 />
                 <InputField
@@ -350,7 +396,7 @@ const SignupForm = () => {
                   required
                   placeholder={t('enterSocietyName')}
                 />
-                <InputField
+                <AddressInputField
                   label={t('societyAddress')}
                   value={formData.societyAddress}
                   onChange={(value) => handleInputChange('societyAddress', value)}
@@ -392,12 +438,22 @@ const SignupForm = () => {
                   required
                   placeholder={t('enterMobile')}
                 />
-                <InputField
-                  label={t('fullNameOptional')}
-                  value={formData.fullName}
-                  onChange={(value) => handleInputChange('fullName', value)}
-                  placeholder={t('enterFullName')}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField
+                    label={t('firstNameOptional')}
+                    value={formData.firstName}
+                    onChange={(value) => handleInputChange('firstName', value)}
+                    required
+                    placeholder={t('enterFirstName')}
+                  />
+                  <InputField
+                    label={t('lastNameOptional')}
+                    required
+                    value={formData.lastName}
+                    onChange={(value) => handleInputChange('lastName', value)}
+                    placeholder={t('enterLastName')}
+                  />
+                </div>
                 <SelectField
                   label={t('workType')}
                   value={formData.workType}
@@ -421,25 +477,9 @@ const SignupForm = () => {
               </>
             )}
 
-            {/* OTP Section */}
-            {showOTP && (
-              <div className="border-t pt-6">
-                <InputField
-                  label={t('enterOTP')}
-                  value={otp}
-                  onChange={setOtp}
-                  required
-                  placeholder="123456"
-                />
-                <p className="text-sm text-gray-600 mt-2">
-                  {t('otpSentTo')} {formData.mobile}
-                </p>
-              </div>
-            )}
-
             {/* Submit Button */}
             <button
-              type="submit"
+              onClick={handleSubmit}
               disabled={isLoading}
               className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-medium text-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -451,7 +491,7 @@ const SignupForm = () => {
                   </svg>
                   {t('processing')}
                 </div>
-              ) : showOTP ? t('verifyOTP') : t('sendOTP')}
+              ) : t('createAccount')}
             </button>
 
             {/* Status Messages */}
@@ -469,7 +509,7 @@ const SignupForm = () => {
                 </div>
               </div>
             )}
-          </form>
+          </div>
         </div>
       </div>
     </div>
